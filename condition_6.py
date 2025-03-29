@@ -1,11 +1,20 @@
 import time 
+import pandas as pd
+
 
 def main():
 
   # Hard coding values just to have these variables in the code
-  recycle_pressure = "moderate"
-  bta_pressure = "low"
-  btb_pressure = "high"
+  file_path = 'Sensor_Data.xlsx'
+  current_index = 0
+
+  high = 8
+  moderate = 6
+  low = 3
+  
+  recycle_pressure = moderate
+  bta_pressure = low
+  btb_pressure = high
   bta_valve = 50
   btb_valve = 50
   fully_open = 100
@@ -13,7 +22,7 @@ def main():
   compressor_speed = 100
   highest_speed = 100
 
-  while recycle_pressure == "moderate" and bta_pressure == "low" and btb_pressure == "high":
+  while recycle_pressure == moderate and bta_pressure == low and btb_pressure == high:
     if btb_valve != fully_open:
       btb_valve = fully_open
 
