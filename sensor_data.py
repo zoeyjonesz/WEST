@@ -49,10 +49,10 @@ def main():
 
         # Print results for this time step
         print(f"Time: {row['TIME']}")
-        print(f"Vessel 1 {sec_1_vessel} Pressure: {sec_1_pressure:.2f} (Flowrate: {sec_1_flowrate})")
-        print(f"Vessel 2 {sec_2_vessel} Pressure: {sec_2_pressure:.2f} (Flowrate: {sec_2_flowrate})")
-        print(f"Vessel 3 {sec_3_vessel} Pressure: {sec_3_pressure:.2f} (Flowrate: {sec_3_flowrate})")
-        print(f"Vessel R {sec_r_vessel} Pressure: {sec_r_pressure:.2f} (Flowrate: {sec_r_flowrate})")
+        print(f"Sec 1 {sec_1_vessel} Pressure: {sec_1_pressure:.2f} (Flowrate: {sec_1_flowrate})")
+        print(f"Sec 2 {sec_2_vessel} Pressure: {sec_2_pressure:.2f} (Flowrate: {sec_2_flowrate})")
+        print(f"Sec 3 {sec_3_vessel} Pressure: {sec_3_pressure:.2f} (Flowrate: {sec_3_flowrate})")
+        print(f"Sec R {sec_r_vessel} Pressure: {sec_r_pressure:.2f} (Flowrate: {sec_r_flowrate})")
         print("-" * 40)
 
         # Simulate waiting for the next set of data (e.g., 1 second delay)
