@@ -35,7 +35,7 @@ def main():
     # Original pressure in the recycle tank before changes are made
     original_recycle_pressure = recycle_pressure
 
-    # Waiting for pressure to change in the recycle tank, add reading through 10 seconds of the spreadsheet
+    # Waiting for pressure to change in the recycle tank, add reading through 10 seconds of the spreadsheet, update the different volumes in the tanks
     time.sleep(10) 
 
     # Finding the change in pressure in the recycle tank
@@ -43,7 +43,7 @@ def main():
 
     # Check whether the pressure is decreasing in the recycle tank (which is ideal)
     if pressure_change < 0: 
-      # Continue from were we were in the spreadsheet
+      # Continue from were we were in the spreadsheet, update the different volumes in the tanks
       time.sleep(10)
                
     # Pressure is increasing in the recycle tank (this is not ideal)          
