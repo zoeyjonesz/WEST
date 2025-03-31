@@ -80,6 +80,7 @@ class System:
                 print("Error: 'bta' valve closed.")
             elif self.bta_volume - self.max_buffer_valve_flow >= 0:
                 self.bta_volume -= self.max_buffer_valve_flow
+                self.add_volume('recycling', self.max_buffer_valve_flow)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'bta'.")
             
@@ -88,6 +89,7 @@ class System:
                 print("Error: 'btb' valve closed.")
             elif self.btb_volume - self.max_buffer_valve_flow >= 0:
                 self.btb_volume -= self.max_buffer_valve_flow
+                self.add_volume('recycling', self.max_buffer_valve_flow)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'btb'.")
             
