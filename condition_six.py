@@ -3,12 +3,7 @@ import pandas as pd
 from system import System 
 
 # Define constants for system settings
-FILE_PATH = 'Sensor_Data.xlsx'
-
-# Pressure thresholds (in psi)
-HIGH_PRESSURE = 8
-MODERATE_PRESSURE = 6
-LOW_PRESSURE = 3
+FILE_PATH = 'non-variable-input-flows.xlsx'
 
 # Valve positions (%)
 FULLY_OPEN = 100
@@ -24,7 +19,6 @@ BTB_VALVE_INITIAL = 50
 # Sleep duration between checks
 SLEEP_DURATION = 10
 
-
 def main():
     """Main function to simulate the system's operation using the System class."""
     # Initialize the system with initial volumes and valve positions
@@ -38,7 +32,9 @@ def main():
     )
 
     # Main loop: Continue operation while conditions hold
-    while system.recycling_volume == MODERATE_PRESSURE and system.bta_volume == LOW_PRESSURE and system.btb_volume == HIGH_PRESSURE:
+    while (system.volume_threshold('recycling') == 'MOD' and
+           system.volume_threshold('bta') == 'LO' and
+           system.volume_threshold('btb') == 'HI'):
         # Check the BTB valve and make sure it is fully open because the tank is full
         if system.valve_BB != FULLY_OPEN:
             system.adjust_valve_position('BB', FULLY_OPEN)
