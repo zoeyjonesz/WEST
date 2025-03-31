@@ -20,7 +20,7 @@ class System:
         self.max_bta_volume = 2.5
         self.max_btb_volume = 2.5
 
-    def add_volume(self, volume_type, amount: int):
+    def add_volume(self, volume_type, amount: int) -> None:
         '''
         Adds volume to the specified tank type.
 
@@ -51,36 +51,51 @@ class System:
         
         else:
             print("Invalid volume type. Please use 'recycling', 'bta', or 'btb'.")
-            
 
-    def remove_volume(self, volume_type, amount: int):
-            '''
-            Removes volume from the specified tank type, ensuring the volume doesn't become negative.
 
-            Parameters:
-            volume_type (str): Type of tank ('recycling', 'bta', 'btb').
-            amount (int): Amount of volume to remove.
+    def remove_volume(self, volume_type, amount: int)-> None:
+        '''
+        Removes volume from the specified tank type, ensuring the volume doesn't become negative.
 
-            Returns:
-            None (modifies the object's state directly). 
-            '''
-            if volume_type == "recycling":
-                if self.recycling_volume - amount >= 0:
-                    self.recycling_volume -= amount
-                else:
-                    print("Error: Cannot remove more volume than the current amount in 'recycling'.")
-            
-            elif volume_type == "bta":
-                if self.bta_volume - amount >= 0:
-                    self.bta_volume -= amount
-                else:
-                    print("Error: Cannot remove more volume than the current amount in 'bta'.")
-            
-            elif volume_type == "btb":
-                if self.btb_volume - amount >= 0:
-                    self.btb_volume -= amount
-                else:
-                    print("Error: Cannot remove more volume than the current amount in 'btb'.")
-            
+        Parameters:
+        volume_type (str): Type of tank ('recycling', 'bta', 'btb').
+        amount (int): Amount of volume to remove.
+
+        Returns:
+        None (modifies the object's state directly). 
+        '''
+        if volume_type == "recycling":
+            if self.recycling_volume - amount >= 0:
+                self.recycling_volume -= amount
             else:
-                print("Invalid volume type. Please use 'recycling', 'bta', or 'btb'.")
+                print("Error: Cannot remove more volume than the current amount in 'recycling'.")
+            
+        elif volume_type == "bta":
+            if self.bta_volume - amount >= 0:
+                self.bta_volume -= amount
+            else:
+                print("Error: Cannot remove more volume than the current amount in 'bta'.")
+            
+        elif volume_type == "btb":
+            if self.btb_volume - amount >= 0:
+                self.btb_volume -= amount
+            else:
+                print("Error: Cannot remove more volume than the current amount in 'btb'.")
+            
+        else:
+            print("Invalid volume type. Please use 'recycling', 'bta', or 'btb'.")
+
+
+    def adjust_compressor_speed(self, speed_increment: int) -> None:
+        """ 
+        Increase the compressor speed by a fixed increment.
+           
+        Parameters:
+        speed_increment (int): The amount to change the compressor speed by. 
+
+        Returns:
+        None (modifies the object's state directly). 
+        
+        """
+        if self.compressor_speed < (self.max_compressor_speed - speed_increment):
+            self.compressor_speed += speed_increment
