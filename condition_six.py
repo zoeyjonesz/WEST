@@ -7,15 +7,15 @@ from sensor_data import parse_input
 FILE_PATH = 'non-variable-input-flows.xlsx'
 
 # Valve positions (%)
-FULLY_OPEN = 100
+FULLY_OPEN = 1
 FULLY_CLOSED = 0
 
 # Compressor speed settings (%)
 SPEED_INCREMENT = 5
 
 # Valve settings for tanks
-BTA_VALVE_INITIAL = 50
-BTB_VALVE_INITIAL = 50
+BTA_VALVE_INITIAL = 0.5
+BTB_VALVE_INITIAL = 0.5
 
 # Sleep duration between checks
 SLEEP_DURATION = 10

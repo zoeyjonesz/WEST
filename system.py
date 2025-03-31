@@ -11,9 +11,10 @@ class System:
         self.valve_BB = valve_BB   
 
         # Predefined limits for compressor speed and valve flow rates      
-        self.lowest_compressor_speed = 30
-        self.max_compressor_speed = 50
-        self.max_valve_flow = 5
+        self.lowest_compressor_speed = 80
+        self.max_compressor_speed = 400
+        self.max_buffer_valve_flow = 0.5      
+        self.max_recycle_valve_flow = 0.231 
 
          # Max volumes for tanks
         self.max_recycling_volume = 7
