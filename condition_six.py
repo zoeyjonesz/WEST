@@ -31,7 +31,7 @@ def main():
 
     # Simulating sensor data reading from an Excel file
     flowrates = parse_input(FILE_PATH)
-    flow_rate_index = 0
+    flow_rate_index = 1
 
     # Main loop: Continue operation while conditions hold
     while (system.volume_threshold('recycling') == 'MOD' and

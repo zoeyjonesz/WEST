@@ -18,7 +18,7 @@ class System:
         # Predefined limits for compressor speed and valve flow rates      
         self.lowest_compressor_speed = 80
         self.max_compressor_speed = 400
-        self.max_buffer_valve_flow = 0.5      
+        self.max_buffer_valve_flow = 0.1      # changed from 0.5 to 0.1 
         self.max_recycle_valve_flow = 0.231 
 
          # Max volumes for tanks
@@ -69,7 +69,6 @@ class System:
         Returns:
         None (modifies the object's state directly). 
         '''
-        # NEED TO CONSIDER THE COMPRESSOR SPEED OF THE RECYCLING TANK
         if volume_type == "recycling":
             if self.recycling_volume - (self.max_recycle_valve_flow * (self.compressor_speed/self.max_compressor_speed)) >= 0:
                 self.recycling_volume -= (self.max_recycle_valve_flow *(self.compressor_speed/self.max_compressor_speed)) 
@@ -77,13 +76,17 @@ class System:
                 print("Error: Cannot remove more volume than the current amount in 'recycling'.")
             
         elif volume_type == "bta":
-            if self.bta_volume - self.max_buffer_valve_flow >= 0:
+            if self.valve_BA == 0:
+                print("Error: 'bta' valve closed.")
+            elif self.bta_volume - self.max_buffer_valve_flow >= 0:
                 self.bta_volume -= self.max_buffer_valve_flow
             else:
                 print("Error: Cannot remove more volume than the current amount in 'bta'.")
             
         elif volume_type == "btb":
-            if self.btb_volume - self.max_buffer_valve_flow >= 0:
+            if self.valve_BB == 0:
+                print("Error: 'btb' valve closed.")
+            elif self.btb_volume - self.max_buffer_valve_flow >= 0:
                 self.btb_volume -= self.max_buffer_valve_flow
             else:
                 print("Error: Cannot remove more volume than the current amount in 'btb'.")
@@ -188,6 +191,7 @@ class System:
             self.remove_volume('recycling')
             self.remove_volume('bta')
             self.remove_volume('btb')
+            print(f"Updated volumes: Recycling: {self.recycling_volume}, BTA: {self.bta_volume}, BTB: {self.btb_volume}")
             # NO ERROR HANDLING HERE, SHOULD CONSIDER ADDING IT
             # Add a delay to simulate time passing
         time.sleep(10)
