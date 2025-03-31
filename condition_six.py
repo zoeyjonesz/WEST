@@ -34,6 +34,7 @@ def main():
 
     # Simulating sensor data reading from an Excel file
     flowrates = parse_input(FILE_PATH)
+    flow_rate_index = 0
 
     # Main loop: Continue operation while conditions hold
     while (system.volume_threshold('recycling') == 'MOD' and
@@ -55,7 +56,7 @@ def main():
 
         # Wait for the pressure to change
         time.sleep(SLEEP_DURATION)
-        # ADD EXCEL READING HERE, UPDATING TANKS
+        # ADD EXCEL READING HERE, UPDATING TANKS!!!!!!!!!!!!
 
         # Simulate pressure changes (replace this with actual sensor data later)
         volume_change = system.recycle_volume - original_recycle_volume
@@ -63,7 +64,7 @@ def main():
         # Check whether the pressure is decreasing (ideal scenario)
         if volume_change < 0:
             time.sleep(SLEEP_DURATION)
-            # ADD EXCEL READING HERE, UPDATING TANKS
+            # ADD EXCEL READING HERE, UPDATING TANKS !!!!!!!!!!!!!
 
         
         # Pressure is increasing, try to adjust the compressor speed using class methods
