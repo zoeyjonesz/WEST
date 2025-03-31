@@ -59,13 +59,12 @@ class System:
             print("Invalid volume type. Please use 'recycling', 'bta', or 'btb'.")
 
 
-    def remove_volume(self, volume_type, amount: int)-> None:
+    def remove_volume(self, volume_type)-> None:
         '''
         Removes volume from the specified tank type, ensuring the volume doesn't become negative.
 
         Parameters:
         volume_type (str): Type of tank ('recycling', 'bta', 'btb').
-        amount (int): Amount of volume to remove.
 
         Returns:
         None (modifies the object's state directly). 
@@ -130,38 +129,38 @@ class System:
 
 
 
-        def volume_threshold(self, tank_type):
-            '''
-            Determine the volume threshold for a specified tank.
+    def volume_threshold(self, tank_type):
+        '''
+        Determine the volume threshold for a specified tank.
         
-            Parameters:
-            tank_type (str): Type of tank ('recycling', 'bta', 'btb').
+        Parameters:
+        tank_type (str): Type of tank ('recycling', 'bta', 'btb').
         
-            Returns:
-            str: Volume status ('LO', 'MOD', 'HI', 'HIHI').
-            '''
-            if tank_type == 'recycling':
-                if self.recycling_volume <= 2.0:
-                    return 'LO'
-                elif self.recycling_volume <= 4.5:
-                    return 'MOD'
-                elif self.recycling_volume <= 6.5:
-                    return 'HI'
-                else:
-                    return 'HIHI'
-        
-            elif tank_type in ['bta', 'btb']:
-                volume = self.bta_volume if tank_type == 'bta' else self.btb_volume
-                if volume <= 0.7:
-                    return 'LO'
-                elif volume <= 1.5:
-                    return 'MOD'
-                elif volume <= 2.3:
-                    return 'HI'
-                else:
-                    return 'HIHI'
+        Returns:
+        str: Volume status ('LO', 'MOD', 'HI', 'HIHI').
+        '''
+        if tank_type == 'recycling':
+            if self.recycling_volume <= 2.0:
+                return 'LO'
+            elif self.recycling_volume <= 4.5:
+                return 'MOD'
+            elif self.recycling_volume <= 6.5:
+                return 'HI'
             else:
-                return 'Invalid tank type'
+                return 'HIHI'
+        
+        elif tank_type in ['bta', 'btb']:
+            volume = self.bta_volume if tank_type == 'bta' else self.btb_volume
+            if volume <= 0.7:
+                return 'LO'
+            elif volume <= 1.5:
+                return 'MOD'
+            elif volume <= 2.3:
+                return 'HI'
+            else:
+                return 'HIHI'
+        else:
+            return 'Invalid tank type'
             
 
     def changes_in_tanks(self, df, index:int):
@@ -186,9 +185,9 @@ class System:
             if btb_flowrate is not None:
                 self.add_volume('btb', btb_flowrate)
 
-            self.recycling_volume('recycling')
-            self.recycling_volume('bta')
-            self.recycling_volume('btb')
+            self.remove_volume('recycling')
+            self.remove_volume('bta')
+            self.remove_volume('btb')
             # NO ERROR HANDLING HERE, SHOULD CONSIDER ADDING IT
             # Add a delay to simulate time passing
         time.sleep(10)

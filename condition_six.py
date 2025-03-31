@@ -21,8 +21,8 @@ def main():
     """Main function to simulate the system's operation using the System class."""
     # Initialize the system with initial volumes and valve positions
     system = System(
-        recycling_volume = 3.5,
-        bta_volume = 2.0,
+        recycling_volume = 4.0,
+        bta_volume = 0.3,
         btb_volume = 2.0,
         compressor_speed = 50,
         valve_BA = BTA_VALVE_INITIAL,
@@ -56,7 +56,7 @@ def main():
         flow_rate_index += 10
 
         # Simulate pressure changes (replace this with actual sensor data later)
-        volume_change = system.recycle_volume - original_recycle_volume
+        volume_change = system.recycling_volume - original_recycle_volume
 
         # Check whether the pressure is decreasing (ideal scenario)
         if volume_change < 0:
