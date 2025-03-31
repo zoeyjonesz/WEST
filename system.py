@@ -99,3 +99,26 @@ class System:
         """
         if self.compressor_speed < (self.max_compressor_speed - speed_increment):
             self.compressor_speed += speed_increment
+
+
+    def adjust_valve_position(self, valve_name: str, target_position: int):
+        """
+        Adjust the specified valve position to a target.
+
+        Parameters:
+        valve_name (str): Name of the valve ('BA' or 'BB').
+        target_position (int): Desired valve position (0 to 100%).
+
+        Returns:
+        None (modifies the object's state directly).
+        """
+        if valve_name == 'BA':
+            if self.valve_BA != target_position:
+                print(f"Adjusting Valve BA from {self.valve_BA}% to {target_position}%")
+                self.valve_BA = target_position
+        elif valve_name == 'BB':
+            if self.valve_BB != target_position:
+                print(f"Adjusting Valve BB from {self.valve_BB}% to {target_position}%")
+                self.valve_BB = target_position
+        else:
+            print("Error: Invalid valve name. Use 'BA' or 'BB'.")

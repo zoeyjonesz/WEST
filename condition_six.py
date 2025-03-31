@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+from system import System 
 
 # Define constants for system settings
 FILE_PATH = 'Sensor_Data.xlsx'
@@ -14,7 +15,6 @@ FULLY_OPEN = 100
 FULLY_CLOSED = 0
 
 # Compressor speed settings (%)
-MAX_COMPRESSOR_SPEED = 100
 SPEED_INCREMENT = 5
 
 # Valve settings for tanks
@@ -24,46 +24,49 @@ BTB_VALVE_INITIAL = 50
 # Sleep duration between checks
 SLEEP_DURATION = 10
 
-def adjust_valve_position(current_valve: int, target_position: int) -> int:
-    """Adjust valve position to a target."""
-    if current_valve != target_position:
-        current_valve = target_position
-    return current_valve
 
 def main():
-    """Main function to simulate the system's operation."""
-    # Initialize system pressures and valves
-    recycle_pressure = MODERATE_PRESSURE
-    bta_pressure = LOW_PRESSURE
-    btb_pressure = HIGH_PRESSURE
+    """Main function to simulate the system's operation using the System class."""
+    # Initialize the system with initial volumes and valve positions
+    system = System(
+        recycling_volume = 3.5,
+        bta_volume = 2.0,
+        btb_volume = 2.0,
+        compressor_speed = 50,
+        valve_BA = BTA_VALVE_INITIAL,
+        valve_BB = BTB_VALVE_INITIAL
+    )
 
-    bta_valve = BTA_VALVE_INITIAL
-    btb_valve = BTB_VALVE_INITIAL
-    compressor_speed = MAX_COMPRESSOR_SPEED
+    # Main loop: Continue operation while conditions hold
+    while system.recycling_volume == MODERATE_PRESSURE and system.bta_volume == LOW_PRESSURE and system.btb_volume == HIGH_PRESSURE:
+        # Check the BTB valve and make sure it is fully open because the tank is full
+        if system.valve_BB != FULLY_OPEN:
+            system.adjust_valve_position('BB', FULLY_OPEN)
 
-    # Main loop: Continue operation while certain conditions hold
-    while recycle_pressure == MODERATE_PRESSURE and bta_pressure == LOW_PRESSURE and btb_pressure == HIGH_PRESSURE:
-        # Adjust valves and compressor speed based on conditions
-        btb_valve = adjust_valve_position(btb_valve, FULLY_OPEN)
-        #compressor_speed = adjust_compressor_speed(compressor_speed)
-        bta_valve = adjust_valve_position(bta_valve, FULLY_CLOSED)
+        if system.compressor_speed < (system.max_compressor_speed - SPEED_INCREMENT):
+            system.adjust_compressor_speed(SPEED_INCREMENT)
+       
+        # Check the BTA valve and make sure it is fully closed because the tank is low
+        if system.valve_BA != FULLY_CLOSED:
+            system.adjust_valve_position('BA', FULLY_CLOSED)
 
         # Store the initial pressure for change tracking
-        original_recycle_pressure = recycle_pressure
+        original_recycle_volume = system.recycling_volume
 
-        # Wait for the pressure to change
+        # Wait for the pressure to change ADD EXCEL READING HERE
         time.sleep(SLEEP_DURATION)
 
-        # Calculate the change in recycle tank pressure
-        pressure_change = recycle_pressure - original_recycle_pressure
+        # Simulate pressure changes (replace this with actual sensor data later)
+        volume_change = system.recycle_volume - original_recycle_volume
 
         # Check whether the pressure is decreasing (ideal scenario)
-        if pressure_change < 0:
+        if volume_change < 0:
             time.sleep(SLEEP_DURATION)
-
-        # Pressure is increasing, try to adjust the compressor speed CHANGE FOR THE CLASS 
-        #elif pressure_change >= 0 and compressor_speed <= (MAX_COMPRESSOR_SPEED - SPEED_INCREMENT):
-         #   compressor_speed = adjust_compressor_speed(compressor_speed)
+        
+        # Pressure is increasing, try to adjust the compressor speed using class methods
+        elif volume_change >= 0 and system.compressor_speed <= (system.max_compressor_speed - SPEED_INCREMENT):
+            system.adjust_compressor_speed(SPEED_INCREMENT)
+            print(f"Compressor speed increased to {system.compressor_speed}%")
 
 if __name__ == "__main__":
     main()
