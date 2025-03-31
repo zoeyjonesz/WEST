@@ -17,9 +17,6 @@ SPEED_INCREMENT = 5
 BTA_VALVE_INITIAL = 0.5
 BTB_VALVE_INITIAL = 0.5
 
-# Sleep duration between checks
-SLEEP_DURATION = 10
-
 def main():
     """Main function to simulate the system's operation using the System class."""
     # Initialize the system with initial volumes and valve positions
@@ -55,18 +52,17 @@ def main():
         original_recycle_volume = system.recycling_volume
 
         # Wait for the pressure to change
-        time.sleep(SLEEP_DURATION)
-        # ADD EXCEL READING HERE, UPDATING TANKS!!!!!!!!!!!!
+        system.changes_in_tanks(flowrates, flow_rate_index)
+        flow_rate_index += 10
 
         # Simulate pressure changes (replace this with actual sensor data later)
         volume_change = system.recycle_volume - original_recycle_volume
 
         # Check whether the pressure is decreasing (ideal scenario)
         if volume_change < 0:
-            time.sleep(SLEEP_DURATION)
-            # ADD EXCEL READING HERE, UPDATING TANKS !!!!!!!!!!!!!
+            system.changes_in_tanks(flowrates, flow_rate_index)
+            flow_rate_index += 10
 
-        
         # Pressure is increasing, try to adjust the compressor speed using class methods
         elif volume_change >= 0 and system.compressor_speed <= (system.max_compressor_speed - SPEED_INCREMENT):
             system.adjust_compressor_speed(SPEED_INCREMENT)

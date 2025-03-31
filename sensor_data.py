@@ -1,6 +1,5 @@
 import pandas as pd
 import time
-from system import System 
 
 def parse_input(file_path):
     """Parse the input file to extract input flow rates."""
@@ -26,4 +25,6 @@ def input_flowrate(df, index: int):
     except KeyError as e:
         print(f"Error: Missing column in the dataframe - {e}")
         return None
+    
+    
     

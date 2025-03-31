@@ -1,3 +1,8 @@
+from sensor_data import parse_input
+from sensor_data import input_flowrate
+import pandas as pd
+import time
+
 class System:
 
     def __init__(self, recycling_volume, bta_volume, btb_volume, compressor_speed, valve_BA, valve_BB):
@@ -67,20 +72,20 @@ class System:
         '''
         # NEED TO CONSIDER THE COMPRESSOR SPEED OF THE RECYCLING TANK
         if volume_type == "recycling":
-            if self.recycling_volume - amount >= 0:
-                self.recycling_volume -= amount
+            if self.recycling_volume - (self.max_recycle_valve_flow * (self.compressor_speed/self.max_compressor_speed)) >= 0:
+                self.recycling_volume -= (self.max_recycle_valve_flow *(self.compressor_speed/self.max_compressor_speed)) 
             else:
                 print("Error: Cannot remove more volume than the current amount in 'recycling'.")
             
         elif volume_type == "bta":
-            if self.bta_volume - amount >= 0:
-                self.bta_volume -= amount
+            if self.bta_volume - self.max_buffer_valve_flow >= 0:
+                self.bta_volume -= self.max_buffer_valve_flow
             else:
                 print("Error: Cannot remove more volume than the current amount in 'bta'.")
             
         elif volume_type == "btb":
-            if self.btb_volume - amount >= 0:
-                self.btb_volume -= amount
+            if self.btb_volume - self.max_buffer_valve_flow >= 0:
+                self.btb_volume -= self.max_buffer_valve_flow
             else:
                 print("Error: Cannot remove more volume than the current amount in 'btb'.")
             
@@ -157,3 +162,34 @@ class System:
                     return 'HIHI'
             else:
                 return 'Invalid tank type'
+            
+
+    def changes_in_tanks(self, df, index:int):
+        """
+        Update the tank volumes based on flow rates for 10 iterations starting from the specified index.
+
+        Parameters:
+        df (dataframe): Excel spreadsheet dataframe containing flow rates.
+        index (int): The current place in the spreadsheet.
+
+        Returns:
+        None (modifies the object's state directly).
+        
+        """
+        for i in range(index, index + 10):  # Loop 10 times from the specified index
+            recycle_flowrate, bta_flowrate, btb_flowrate, time_value = input_flowrate(df, i)
+        
+            if recycle_flowrate is not None:
+                self.add_volume('recycling', recycle_flowrate)
+            if bta_flowrate is not None:
+                self.add_volume('bta', bta_flowrate)
+            if btb_flowrate is not None:
+                self.add_volume('btb', btb_flowrate)
+
+            self.recycling_volume('recycling')
+            self.recycling_volume('bta')
+            self.recycling_volume('btb')
+            # NO ERROR HANDLING HERE, SHOULD CONSIDER ADDING IT
+            # Add a delay to simulate time passing
+        time.sleep(10)
+
