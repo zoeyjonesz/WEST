@@ -1,6 +1,7 @@
 import time
 import pandas as pd
 from system import System 
+from sensor_data import parse_input
 
 # Define constants for system settings
 FILE_PATH = 'non-variable-input-flows.xlsx'
@@ -31,6 +32,9 @@ def main():
         valve_BB = BTB_VALVE_INITIAL
     )
 
+    # Simulating sensor data reading from an Excel file
+    flowrates = parse_input(FILE_PATH)
+
     # Main loop: Continue operation while conditions hold
     while (system.volume_threshold('recycling') == 'MOD' and
            system.volume_threshold('bta') == 'LO' and
@@ -49,8 +53,9 @@ def main():
         # Store the initial pressure for change tracking
         original_recycle_volume = system.recycling_volume
 
-        # Wait for the pressure to change ADD EXCEL READING HERE
+        # Wait for the pressure to change
         time.sleep(SLEEP_DURATION)
+        # ADD EXCEL READING HERE, UPDATING TANKS
 
         # Simulate pressure changes (replace this with actual sensor data later)
         volume_change = system.recycle_volume - original_recycle_volume
@@ -58,6 +63,8 @@ def main():
         # Check whether the pressure is decreasing (ideal scenario)
         if volume_change < 0:
             time.sleep(SLEEP_DURATION)
+            # ADD EXCEL READING HERE, UPDATING TANKS
+
         
         # Pressure is increasing, try to adjust the compressor speed using class methods
         elif volume_change >= 0 and system.compressor_speed <= (system.max_compressor_speed - SPEED_INCREMENT):

@@ -64,6 +64,7 @@ class System:
         Returns:
         None (modifies the object's state directly). 
         '''
+        # NEED TO CONSIDER THE COMPRESSOR SPEED OF THE RECYCLING TANK
         if volume_type == "recycling":
             if self.recycling_volume - amount >= 0:
                 self.recycling_volume -= amount
@@ -114,11 +115,44 @@ class System:
         """
         if valve_name == 'BA':
             if self.valve_BA != target_position:
-                print(f"Adjusting Valve BA from {self.valve_BA}% to {target_position}%")
                 self.valve_BA = target_position
         elif valve_name == 'BB':
             if self.valve_BB != target_position:
-                print(f"Adjusting Valve BB from {self.valve_BB}% to {target_position}%")
                 self.valve_BB = target_position
         else:
             print("Error: Invalid valve name. Use 'BA' or 'BB'.")
+
+
+
+        def volume_threshold(self, tank_type):
+            '''
+            Determine the volume threshold for a specified tank.
+        
+            Parameters:
+            tank_type (str): Type of tank ('recycling', 'bta', 'btb').
+        
+            Returns:
+            str: Volume status ('LO', 'MOD', 'HI', 'HIHI').
+            '''
+            if tank_type == 'recycling':
+                if self.recycling_volume <= 2.0:
+                    return 'LO'
+                elif self.recycling_volume <= 4.5:
+                    return 'MOD'
+                elif self.recycling_volume <= 6.5:
+                    return 'HI'
+                else:
+                    return 'HIHI'
+        
+            elif tank_type in ['bta', 'btb']:
+                volume = self.bta_volume if tank_type == 'bta' else self.btb_volume
+                if volume <= 0.7:
+                    return 'LO'
+                elif volume <= 1.5:
+                    return 'MOD'
+                elif volume <= 2.3:
+                    return 'HI'
+                else:
+                    return 'HIHI'
+            else:
+                return 'Invalid tank type'

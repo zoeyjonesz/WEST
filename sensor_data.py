@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+from system import System 
 
 def parse_input(file_path):
     """Parse the input file to extract input flow rates."""
@@ -26,4 +27,3 @@ def input_flowrate(df, index: int):
         print(f"Error: Missing column in the dataframe - {e}")
         return None
     
-   # need to determine the output of a tank still, def output_flowrate():
