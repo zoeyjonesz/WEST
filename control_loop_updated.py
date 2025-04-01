@@ -2,13 +2,20 @@ import time
 import pandas as pd 
 
 # can I use backflow to 
-
 class GasSystem:
     
-    # range for max pressure = 2.3 highest (I kind of forgot the values)
-    # 0.75 -> 1.3 = moderate 
-    # 1.3 -> 2.3 = high 
-    # 0 -> 0.75 = low 
+    # buffer cubic meter range - max capacity 2.5 cubic m
+    # low = 0.0 -0.7
+    # moderate = 0.7-1.5
+    # high = 1.5 - 2.3 
+    # hihi = 2.3 -2.5
+    # since no moderate in buffer tank: low - 0.0 - 1.5
+    
+    # recycle 
+    # low = 0.0 - 0.2
+    # moderate = 2 - 4.5
+    # high = 4.5 - 6.5
+    # hihi = 6.5 - 7
     
     # modeling the following condition 3
     # Recycle Tank – Low
@@ -63,16 +70,28 @@ class GasSystem:
 
     
     
-    # function to classify pressure 
-    def classify_volume(self, volume):
-        if 0 <= volume < 0.75:
+    def classify_buffer_volume(self, volume):
+        if 0 <= volume < 1.5:
             return "low"
-        elif 0.75 <= volume < 1.3:
-            return "moderate"
-        elif 1.3 <= volume <= 2.3:
+        elif 1.5 <= volume <= 2.3:
             return "high"
-        else:
-            return "out of range"
+        elif 2.3 <= volume <= 2.5:
+            return "Dangerous hihi"
+        else: 
+            return "Error Pressure is out of range"
+            
+   
+    def classify_recycle_volume(self, volume):
+        if 0 <= volume < 2.0:
+            return "low"
+        elif 2.0 <= volume <= 4.5:
+            return "moderate"
+        elif 4.5 <= volume <= 6.5:
+            return "high"
+        elif 6.5 <= volume <= 7.0: 
+            return "Dangerous hihi"
+        else: 
+            return "Error Pressure is out of range"
     
     
     # update tank volumes 
@@ -90,8 +109,8 @@ class GasSystem:
     
     # adjust the volume in BA
     def adjust_BA(self): 
-        bta_status = self.classify_volume(self.bta_volume)
-        recycle_status = self.classify_volume(self.recycling_volume)
+        bta_status = self.classify_buffer_volume(self.bta_volume)
+        recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
         if self.bta_volume > self.recycling_volume:
             
@@ -108,8 +127,8 @@ class GasSystem:
             
     # adjust the volume in BB
     def adjust_BB(self): 
-        btb_status = self.classify_volume(self.btb_volume)
-        recycle_status = self.classify_volume(self.recycling_volume)
+        btb_status = self.classify_buffer_volume(self.btb_volume)
+        recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
         if self.btb_volume > self.recycling_volume:
             
@@ -126,7 +145,7 @@ class GasSystem:
                 
     # adjust volume in recycle compressor 
     def adjust_recycle(self): 
-        recycle_status = self.classify_volume(self.recycling_volume)
+        recycle_status = self.classify_buffer_volume(self.recycling_volume)
         
         if recycle_status == "low": 
             self.compressor_speed = max(self.compressor_speed - 10, self.lowest_compressor_speed)
@@ -197,9 +216,9 @@ class GasSystem:
     def run_simulation(self, max_steps=100):
         
         for t in range(max_steps):
-            recycle_status = self.classify_volume(self.recycling_volume)
-            bta_status = self.classify_volume(self.bta_volume)
-            btb_status = self.classify_volume(self.btb_volume)
+            recycle_status = self.classify_recycle_volume(self.recycling_volume)
+            bta_status = self.classify_buffer_volume(self.bta_volume)
+            btb_status = self.classify_buffer_volume(self.btb_volume)
             print(recycle_status)
             print(bta_status)
             print(btb_status)
