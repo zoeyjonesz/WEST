@@ -1,6 +1,8 @@
 import time 
 import pandas as pd 
 
+# can I use backflow to 
+
 class GasSystem:
     
     # range for max pressure = 2.3 highest (I kind of forgot the values)
@@ -8,13 +10,13 @@ class GasSystem:
     # 1.3 -> 2.3 = high 
     # 0 -> 0.75 = low 
     
-    # modeling the following condition
-    # Recycle Tank – Moderate Pressure
-    # BTA – Low Pressure
-    # BTB – High Pressure
+    # modeling the following condition 3
+    # Recycle Tank – Low
+    # BTA – High
+    # BTB – Low
 
     
-    def __init__(self, recycling_volume=1.0, bta_volume=0.5, btb_volume=1.3):
+    def __init__(self, recycling_volume=0.5, bta_volume=1.5, btb_volume=0.6):
         # Tank Volumes
         self.recycling_volume = recycling_volume
         self.bta_volume = bta_volume
@@ -211,3 +213,4 @@ class GasSystem:
 # call the system 
 system = GasSystem()
 system.run_simulation()
+        
