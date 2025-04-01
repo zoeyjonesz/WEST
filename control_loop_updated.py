@@ -69,13 +69,16 @@ class GasSystem:
         else:
             return "out of range"
     
+    
     # update tank volumes 
     def update_volumes(self, recycling_volume=None, bta_volume=None, btb_volume=None): 
         
         if recycling_volume is not None:
             self.recycling_volume = recycle_input + recycling_volume - ((compressor_speed/max_compressor_speed) * max_recycle_valve_flow)
+            
         if bta_volume is not None:
             self.bta_volume = bta_input + bta_volume - (self.max_buffer_valve_flow  * (valve_BA/100))
+            
         if btb_volume is not None:
             self.btb_volume = btb_input + btb_volume - (self.max_buffer_valve_flow  * (valve_BB/100))
          
@@ -92,7 +95,7 @@ class GasSystem:
             self.valve_BB = 100
             
         # take the derivative 
-        original_pressure = self.recycling_pressure
+        original_pressure = self.recycling_volume
             
         
         # simulating the volume change in tanks over 10 seconds 
@@ -100,16 +103,16 @@ class GasSystem:
             # read row data from excel 
             self.parse_data()
             # update tank volume 
-            self.update_volumes(recycling_volume, bta_volume, btb_volume)
+            self.update_volumes()
             self.line_counter += 1
-            print(f"[t={self.time_stamp}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
+            print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
 
         # actually waiting 10 seconds so it's realistic 
-        wait(10)
+        time.sleep(10)
                 
             
         # calculate the difference
-        derivative = self.recycling_pressure - original_pressure 
+        derivative = self.recycling_volume - original_pressure 
 
         # derivative < 0 pressure is decreasing in recycle tank
         if derivative < 0: 
@@ -120,19 +123,21 @@ class GasSystem:
             # read row data from excel 
                 self.parse_data()
                 # update tank volume 
-                self.update_volumes(recycling_volume, bta_volume, btb_volume)
+                self.update_volumes()
                 self.line_counter += 1
-                print(f"[t={self.time_stamp}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
+                print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
 
         # actually waiting 10 seconds so it's realistic 
-        wait(10)
+        time.sleep(10)
 
         
-        elif derivative >= 0 and self.compressor_speed <= self.max_compressor_speed - 10: 
+        if derivative >= 0 and self.compressor_speed <= self.max_compressor_speed - 10: 
             print("Recycle tank stable or rising. Increasing compressor speed.")
             self.compressor_speed += 10 
      
+      
         
+    
     def run_simulation(self, max_steps=100):
         
         for t in range(max_steps):
