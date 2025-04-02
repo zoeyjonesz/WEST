@@ -11,7 +11,7 @@ FULLY_OPEN = 1
 FULLY_CLOSED = 0
 
 # Compressor speed settings (%)
-SPEED_INCREMENT = 5
+SPEED_INCREMENT = 20
 
 # Valve settings for tanks
 BTA_VALVE_INITIAL = 0.5
@@ -60,11 +60,13 @@ def main():
 
         # Check whether the pressure is decreasing (ideal scenario)
         if volume_change < 0:
+            print(f"Ideal: Pressure decreased by {abs(volume_change)} units.")
             system.changes_in_tanks(flowrates, flow_rate_index)
             flow_rate_index += 10
 
         # Pressure is increasing, try to adjust the compressor speed using class methods
         elif volume_change >= 0 and system.compressor_speed <= (system.max_compressor_speed - SPEED_INCREMENT):
+            print(f"Not ideal: Pressure increased by {abs(volume_change)} units.")
             system.adjust_compressor_speed(SPEED_INCREMENT)
             print(f"Compressor speed increased to {system.compressor_speed}%")
 

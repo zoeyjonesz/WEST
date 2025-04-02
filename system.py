@@ -19,7 +19,7 @@ class System:
         self.lowest_compressor_speed = 80
         self.max_compressor_speed = 400
         self.max_buffer_valve_flow = 0.1      # changed from 0.5 to 0.1 
-        self.max_recycle_valve_flow = 0.231 
+        self.max_recycle_valve_flow = 0.6 
 
          # Max volumes for tanks
         self.max_recycling_volume = 7
@@ -77,7 +77,7 @@ class System:
             
         elif volume_type == "bta":
             if self.valve_BA == 0:
-                print("Error: 'bta' valve closed.")
+                print("'bta' valve closed.")
             elif self.bta_volume - self.max_buffer_valve_flow >= 0:
                 self.bta_volume -= self.max_buffer_valve_flow
                 self.add_volume('recycling', self.max_buffer_valve_flow)
@@ -86,7 +86,7 @@ class System:
             
         elif volume_type == "btb":
             if self.valve_BB == 0:
-                print("Error: 'btb' valve closed.")
+                print("'btb' valve closed.")
             elif self.btb_volume - self.max_buffer_valve_flow >= 0:
                 self.btb_volume -= self.max_buffer_valve_flow
                 self.add_volume('recycling', self.max_buffer_valve_flow)
@@ -156,11 +156,9 @@ class System:
         
         elif tank_type in ['bta', 'btb']:
             volume = self.bta_volume if tank_type == 'bta' else self.btb_volume
-            if volume <= 0.7:
+            if volume <= 1.1:
                 return 'LO'
-            elif volume <= 1.5:
-                return 'MOD'
-            elif volume <= 2.3:
+            elif volume < 2.3:
                 return 'HI'
             else:
                 return 'HIHI'
