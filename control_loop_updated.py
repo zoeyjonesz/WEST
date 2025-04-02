@@ -72,7 +72,7 @@ class GasSystem:
             self.bta_input = row['BTA Input']
             self.btb_input = row['BTB Input']
             
-#             print(f"Time: {self.time}:  Recycle: {self.recycle_input}, BTA: {self.bta_input}, BTB: {self.btb_input}")
+            print(f"Time: {self.time}:  Recycle: {self.recycle_input}, BTA: {self.bta_input}, BTB: {self.btb_input}")
             
             # increment time stamp 
             self.line_counter += 1
@@ -109,18 +109,17 @@ class GasSystem:
     def update_volumes(self): 
         
         if self.recycling_volume is not None:
-            self.recycling_volume = self.recycle_input  
-            + (self.max_buffer_valve_flow  * (self.valve_BA/100)) 
-            + (self.max_buffer_valve_flow  * (self.valve_BB/100))
-            + self.recycling_volume 
-            - ((self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow)
+            self.recycling_volume = self.recycle_input + (self.max_buffer_valve_flow  * (self.valve_BA/100)) + (self.max_buffer_valve_flow  * (self.valve_BB/100))+ self.recycling_volume - ((self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow)
             print(f"Input: {self.recycle_input}")
+            print(f"Buffer flow A: {(self.max_buffer_valve_flow  * (self.valve_BA/100))}")
+            print(f"Buffer flow B: {(self.max_buffer_valve_flow  * (self.valve_BB/100))}")
+
             print(f"Tank Volume: {self.recycling_volume}")
             print(f"Subtract: {(self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow}")
             
         if self.bta_volume is not None:
             self.bta_volume = self.bta_input + self.bta_volume - (self.max_buffer_valve_flow  * (self.valve_BA/100))
-            
+            print(f"BTA: {self.bta_volume}")
         if self.btb_volume is not None:
             self.btb_volume = self.btb_input + self.btb_volume - (self.max_buffer_valve_flow  * (self.valve_BB/100))
     
@@ -128,49 +127,46 @@ class GasSystem:
     # adjust the volume in BA
     def adjust_BA(self):
         
-        # if idle close valve
-        if self.bta_input == 0:
-#             print("BTB input idle — closing BB")
-            self.valve_BB = 0
-            return 
-        
         bta_status = self.classify_buffer_volume(self.bta_volume)
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
-        if self.bta_volume > self.recycling_volume:
-            
-            # working with simplified conditions for now
-            if bta_status != "low" and recycle_status in ["low", "moderate"]: 
-                self.valve_BA = 100     # open bta valve 100 %
-            elif bta_status == "low": 
-                self.valve_BA = 0
-        else: 
-#             print("Closing valve B: Buffer too low to flow")
+        if self.bta_input == 0 and bta_status == "low":
             self.valve_BA = 0
+            return 
+   
+        if self.bta_volume > self.recycling_volume and recycle_status == "low":
+            self.valve_BA = 100
+            
+        # Also allow flow if BTB is high and Recycle is moderate
+        elif bta_status == "high" and recycle_status == "moderate":
+            self.valve_BA = 100
+
+        else:
+            self.valve_BA = 0
+                   
             
             
             
     # adjust the volume in BB
     def adjust_BB(self): 
         
-        # if idle close valve
-        if self.btb_input == 0:
-#             print("BTB input idle — closing BB")
-            self.valve_BB = 0
-            return 
         
         btb_status = self.classify_buffer_volume(self.btb_volume)
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
-        if self.btb_volume > self.recycling_volume:
+        # if idle close valve
+        if self.btb_input == 0 and btb_status == "low":
+            self.valve_BB = 0
+            return 
+        
+        if self.btb_volume > self.recycling_volume and recycle_status == "low":
+            self.valve_BB = 100
             
-            # working with simplified conditions for now 
-            if btb_status != "low" and recycle_status in ["low", "moderate"]: 
-                self.valve_BB = 100     # open bta valve 100 %
-            elif btb_status == "low": 
-                self.valve_BB = 0
-        else: 
-#             print("Closing valve B: Buffer too low to flow")
+        # Also allow flow if BTB is high and Recycle is moderate
+        elif btb_status == "high" and recycle_status == "moderate":
+            self.valve_BB = 100
+
+        else:
             self.valve_BB = 0
                    
                 
@@ -187,8 +183,7 @@ class GasSystem:
 #             print("Recycle high → Increase compressor speed")
         
         
-        
-    def control_loop(self): 
+    def control_loop(self):
             
         # take the derivative 
         original_pressure = self.recycling_volume
@@ -224,7 +219,8 @@ class GasSystem:
 
         # derivative < 0 pressure is decreasing in recycle tank
         if derivative < 0: 
-#             print("Recycle tank volume decreasing. Holding pressure.")
+            
+            print("Recycle tank volume decreasing. Holding pressure.")
             
             # simulating the volume change in tanks over 10 seconds 
             for _ in range(10): 
@@ -259,18 +255,14 @@ class GasSystem:
       
         
     
-    def run_simulation(self, max_steps=100):
+    def run_simulation(self, max_steps=200):
         
         for t in range(max_steps):
             recycle_status = self.classify_recycle_volume(self.recycling_volume)
             bta_status = self.classify_buffer_volume(self.bta_volume)
             btb_status = self.classify_buffer_volume(self.btb_volume)
-            print(recycle_status)
-            print(bta_status)
-            print(btb_status)
             
-            
-#             print(f"Recycle {t}: {recycle_status}, BTA: {bta_status}, BTB: {btb_status}")
+            print(f"Recycle {t}: {recycle_status}, BTA: {bta_status}, BTB: {btb_status}")
 
             self.control_loop()
         
