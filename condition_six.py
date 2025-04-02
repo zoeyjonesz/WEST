@@ -49,6 +49,7 @@ def main():
             system.adjust_valve_position('BA', FULLY_CLOSED)
 
         # Store the initial pressure for change tracking
+        orginal_btb_volume = system.btb_volume
         original_recycle_volume = system.recycling_volume
 
         # Wait for the pressure to change
@@ -56,17 +57,31 @@ def main():
         flow_rate_index += 10
 
         # Simulate pressure changes (replace this with actual sensor data later)
-        volume_change = system.recycling_volume - original_recycle_volume
+        recycle_volume_change = system.recycling_volume - original_recycle_volume
+        btb_volume_change = system.btb_volume - orginal_btb_volume
+
+        # CASE 1: BTB DEC & Recycle Tank DEC
+        # CASE 2: BTB DEC & Recycle Tank INC
+        # CASE 3: BTB INC & Recycle Tank DEC
+        # CASE 4: BTB INC & Recycle Tank INC
 
         # Check whether the pressure is decreasing (ideal scenario)
-        if volume_change < 0:
-            print(f"Ideal: Pressure decreased by {abs(volume_change)} units.")
+        if recycle_volume_change < 0 and btb_volume_change < 0:
+            print(f"Ideal: Recycle tank pressure decreased by {abs(recycle_volume_change)} units.")
             system.changes_in_tanks(flowrates, flow_rate_index)
             flow_rate_index += 10
+        
+        elif recycle_volume_change >= 0 and btb_volume_change < 0:
+            print(f"Condition Change: Recycle tank pressure increased by {abs(recycle_volume_change)} units, but BTB pressure decreased by {abs(btb_volume_change)} units.")
+            print(f"Switching to Condition 9: Recycle tank pressure high, BTA & BTB pressure low.")
+
+        elif recycle_volume_change < 0 and btb_volume_change >= 0:
+            print(f"Not ideal: Recycle tank pressure decreased by {abs(recycle_volume_change)} units, but BTB pressure increased by {abs(btb_volume_change)} units.")
+            #PURGE THE BTB TANK???
 
         # Pressure is increasing, try to adjust the compressor speed using class methods
-        elif volume_change >= 0 and system.compressor_speed <= (system.max_compressor_speed - SPEED_INCREMENT):
-            print(f"Not ideal: Pressure increased by {abs(volume_change)} units.")
+        elif recycle_volume_change >= 0 and system.compressor_speed <= (system.max_compressor_speed - SPEED_INCREMENT):
+            print(f"Not ideal: Pressure increased by {abs(recycle_volume_change)} units.")
             system.adjust_compressor_speed(SPEED_INCREMENT)
             print(f"Compressor speed increased to {system.compressor_speed}%")
 
