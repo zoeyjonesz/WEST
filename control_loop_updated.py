@@ -1,7 +1,9 @@
 import time 
 import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-# can I use backflow to 
 class GasSystem:
     
     # buffer cubic meter range - max capacity 2.5 cubic m
@@ -30,14 +32,14 @@ class GasSystem:
         self.btb_volume = btb_volume
 
         # Control Parameters - Note: Problem where do we start? 
-        self.compressor_speed = 50
+        self.compressor_speed = 80
         self.valve_BA = 50
         self.valve_BB = 50
 
         # System Limits
         self.lowest_compressor_speed = 80
         self.max_compressor_speed = 400
-        self.max_buffer_valve_flow = 0.5
+        self.max_buffer_valve_flow = 0.05
         self.max_recycle_valve_flow = 0.231
 
 
@@ -46,6 +48,14 @@ class GasSystem:
         self.btb_input = 0
         self.recycle_input = 0
         self.line_counter = 0
+        self.time = 0
+        
+        # history
+        self.time_history = []
+        self.recycle_history = []
+        self.bta_history = []
+        self.btb_history = []
+
 
         self.data = pd.read_excel("Flow_Test_Updated.xlsx", sheet_name="Input Flows")
         
@@ -57,11 +67,12 @@ class GasSystem:
             row = df.iloc[self.line_counter]
             
             # pull row information & save to variables
+            self.time = pd.to_datetime(row['Time'], format="%H:%M:%S")
             self.recycle_input = row['Recycle Tank Input']
             self.bta_input = row['BTA Input']
             self.btb_input = row['BTB Input']
             
-            print(f"Recycle: {self.recycle_input}, BTA: {self.bta_input}, BTB: {self.btb_input}")
+#             print(f"Time: {self.time}:  Recycle: {self.recycle_input}, BTA: {self.bta_input}, BTB: {self.btb_input}")
             
             # increment time stamp 
             self.line_counter += 1
@@ -76,7 +87,7 @@ class GasSystem:
         elif 1.5 <= volume <= 2.3:
             return "high"
         elif 2.3 <= volume <= 2.5:
-            return "Dangerous hihi"
+            return "hihi"
         else: 
             return "Error Pressure is out of range"
             
@@ -89,7 +100,7 @@ class GasSystem:
         elif 4.5 <= volume <= 6.5:
             return "high"
         elif 6.5 <= volume <= 7.0: 
-            return "Dangerous hihi"
+            return "hihi"
         else: 
             return "Error Pressure is out of range"
     
@@ -98,7 +109,14 @@ class GasSystem:
     def update_volumes(self): 
         
         if self.recycling_volume is not None:
-            self.recycling_volume = self.recycle_input + self.recycling_volume - ((self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow)
+            self.recycling_volume = self.recycle_input  
+            + (self.max_buffer_valve_flow  * (self.valve_BA/100)) 
+            + (self.max_buffer_valve_flow  * (self.valve_BB/100))
+            + self.recycling_volume 
+            - ((self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow)
+            print(f"Input: {self.recycle_input}")
+            print(f"Tank Volume: {self.recycling_volume}")
+            print(f"Subtract: {(self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow}")
             
         if self.bta_volume is not None:
             self.bta_volume = self.bta_input + self.bta_volume - (self.max_buffer_valve_flow  * (self.valve_BA/100))
@@ -108,51 +126,65 @@ class GasSystem:
     
     
     # adjust the volume in BA
-    def adjust_BA(self): 
+    def adjust_BA(self):
+        
+        # if idle close valve
+        if self.bta_input == 0:
+#             print("BTB input idle — closing BB")
+            self.valve_BB = 0
+            return 
+        
         bta_status = self.classify_buffer_volume(self.bta_volume)
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
         if self.bta_volume > self.recycling_volume:
             
             # working with simplified conditions for now
-            if bta_status == "high": 
+            if bta_status != "low" and recycle_status in ["low", "moderate"]: 
                 self.valve_BA = 100     # open bta valve 100 %
             elif bta_status == "low": 
                 self.valve_BA = 0
         else: 
-            print("Closing valve B: Buffer too low to flow")
+#             print("Closing valve B: Buffer too low to flow")
             self.valve_BA = 0
             
             
             
     # adjust the volume in BB
     def adjust_BB(self): 
+        
+        # if idle close valve
+        if self.btb_input == 0:
+#             print("BTB input idle — closing BB")
+            self.valve_BB = 0
+            return 
+        
         btb_status = self.classify_buffer_volume(self.btb_volume)
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
         if self.btb_volume > self.recycling_volume:
             
             # working with simplified conditions for now 
-            if btb_status == "high": 
+            if btb_status != "low" and recycle_status in ["low", "moderate"]: 
                 self.valve_BB = 100     # open bta valve 100 %
             elif btb_status == "low": 
                 self.valve_BB = 0
         else: 
-            print("Closing valve B: Buffer too low to flow")
+#             print("Closing valve B: Buffer too low to flow")
             self.valve_BB = 0
                    
                 
                 
     # adjust volume in recycle compressor 
     def adjust_recycle(self): 
-        recycle_status = self.classify_buffer_volume(self.recycling_volume)
+        recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
         if recycle_status == "low": 
-            self.compressor_speed = max(self.compressor_speed - 10, self.lowest_compressor_speed)
-            print("Recycle low → Decreasing compressor speed")
+            self.compressor_speed = max(self.compressor_speed - 5, self.lowest_compressor_speed)
+#             print("Recycle low → Decreasing compressor speed")
         elif recycle_status == "high": 
-            self.compressor_speed = min(self.compressor_speed + 10, self.max_compressor_speed)
-            print("Recycle high → Increase compressor speed")
+            self.compressor_speed = min(self.compressor_speed + 5, self.max_compressor_speed)
+#             print("Recycle high → Increase compressor speed")
         
         
         
@@ -166,18 +198,25 @@ class GasSystem:
         for _ in range(10): 
             
             self.parse_data()       # read row data from excel 
-            self.update_volumes()   # update tank volume 
             
-            # apply logic here NOTE might change this 
+            # apply logic here NOTE location of these calls
             self.adjust_recycle()
             self.adjust_BA()
             self.adjust_BB()
             
+            self.update_volumes()   # update tank volume 
+            
+            self.time_history.append(self.time)
+            self.recycle_history.append(self.recycling_volume)
+            self.bta_history.append(self.bta_volume)
+            self.btb_history.append(self.btb_volume)
+
+            
             self.line_counter += 1
-            print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
+#             print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
 
         # sleep 10 seconds  
-        time.sleep(10)
+        time.sleep(1)
                 
             
         # calculate the difference
@@ -185,27 +224,34 @@ class GasSystem:
 
         # derivative < 0 pressure is decreasing in recycle tank
         if derivative < 0: 
-            print("Recycle tank volume decreasing. Holding pressure.")
+#             print("Recycle tank volume decreasing. Holding pressure.")
             
             # simulating the volume change in tanks over 10 seconds 
             for _ in range(10): 
       
                 self.parse_data()
-                self.update_volumes()   # update tank volume 
-                # apply logic here NOTE might change this 
+                # apply logic here NOTE might change location of these calls 
                 self.adjust_recycle()
                 self.adjust_BA()
                 self.adjust_BB()
+                self.update_volumes()   # update tank volume 
+                
+                
+                self.time_history.append(self.time)
+                self.recycle_history.append(self.recycling_volume)
+                self.bta_history.append(self.bta_volume)
+                self.btb_history.append(self.btb_volume)
+
                 
                 self.line_counter += 1
-                print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
+#                 print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
 
         # actually waiting 10 seconds so it's realistic 
-        time.sleep(10)
+        time.sleep(1)
 
         
         if derivative >= 0 and self.compressor_speed <= self.max_compressor_speed - 10: 
-            print("Recycle tank stable or rising. Increasing compressor speed to maintain.")
+#             print("Recycle tank stable or rising. Increasing compressor speed to maintain.")
             self.compressor_speed += 5
             
             # Note decided if I want to update compressor speed here right away 
@@ -224,7 +270,7 @@ class GasSystem:
             print(btb_status)
             
             
-            print(f"Recycle {t}: {recycle_status}, BTA: {bta_status}, BTB: {btb_status}")
+#             print(f"Recycle {t}: {recycle_status}, BTA: {bta_status}, BTB: {btb_status}")
 
             self.control_loop()
         
@@ -232,4 +278,3 @@ class GasSystem:
 # call the system 
 system = GasSystem()
 system.run_simulation()
-        
