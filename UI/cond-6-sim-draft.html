@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biogas Flow Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center p-6">
+  <h1 class="text-3xl font-bold mb-8">Condition 6 Flow Simulation</h1>
+  <p class="text-lg text-gray-700 mb-6 italic">
+    Initial States: Buffer Tank A at <span class="text-green-600 font-semibold">LOW</span> pressure,
+    BTB at <span class="text-orange-600 font-semibold">HIGH</span>,
+    Recycle Tank at <span class="text-yellow-600 font-semibold">MODERATE</span>
+  </p>
+
+  <div class="flex items-center space-x-12 mb-10">
+    <!-- Buffer Tanks Column -->
+    <div class="flex flex-col items-center space-y-10">
+      <!-- BTA -->
+      <div class="flex flex-col items-center bg-gray-200 p-4 rounded-lg shadow w-44 h-[350px]">
+        <span class="font-semibold text-lg">Buffer A</span>
+        <div class="w-full h-40 rounded relative overflow-hidden bg-gray-300 mt-1">
+          <div id="btaBar" class="absolute bottom-0 w-full rounded-t"></div>
+        </div>
+        <div class="mt-2 flex flex-col items-center">
+          <span id="btaLabel" class="text-base">0.3</span>
+          <span class="text-sm text-gray-600">/ 2.5 m³</span>
+          <span id="btaPressure" class="text-xs mt-1 px-2 py-1 rounded bg-blue-100">LO</span>
+          <span id="btaValveState" class="text-sm font-semibold mt-1">Valve: CLOSED</span>
+        </div>
+        <div class="mt-2 text-xs text-center">
+          <div>Constant Input: <span class="font-semibold">0.020 m³/s</span></div>
+          <div>Source: PSA 2 & 3</div>
+          <div id="btaFlowStatus" class="mt-1 text-green-600 font-semibold">✔ Flowing In</div>
+        </div>
+      </div>
+
+      <!-- BTB -->
+      <div class="flex flex-col items-center bg-gray-200 p-4 rounded-lg shadow w-44 h-[350px]">
+        <span class="font-semibold text-lg">Buffer B</span>
+        <div class="w-full h-40 rounded relative overflow-hidden bg-gray-300 mt-1">
+          <div id="btbBar" class="absolute bottom-0 w-full rounded-t"></div>
+        </div>
+        <div class="mt-2 flex flex-col items-center">
+          <span id="btbLabel" class="text-base">2.0</span>
+          <span class="text-sm text-gray-600">/ 2.5 m³</span>
+          <span id="btbPressure" class="text-xs mt-1 px-2 py-1 rounded bg-blue-100">HI</span>
+          <span id="btbValveState" class="text-sm font-semibold mt-1">Valve: OPEN</span>
+        </div>
+        <div class="mt-2 text-xs text-center">
+          <div>Constant Input: <span class="font-semibold">0.015 m³/s</span></div>
+          <div>Source: Rotary PSA</div>
+          <div id="btbFlowStatus" class="mt-1 text-green-600 font-semibold">✔ Flowing In</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="text-3xl font-bold">➡️</span>
+
+    <!-- Recycle Tank -->
+    <div class="flex flex-col items-center bg-gray-200 p-4 rounded-lg shadow w-48 h-[350px]">
+      <span class="font-semibold text-lg">Recycle Tank</span>
+      <div class="w-full h-40 rounded relative overflow-hidden bg-gray-300 mt-1">
+        <div id="recycleBar" class="absolute bottom-0 w-full rounded-t"></div>
+      </div>
+      <div class="mt-2 flex flex-col items-center">
+        <span id="recycleLabel" class="text-base">4.0 / 7 m³</span>
+        <span id="recyclePressure" class="text-xs mt-1 px-2 py-1 rounded bg-blue-100">MOD</span>
+      </div>
+      <div class="mt-4 text-xs text-center">
+        <div>Constant Input: <span class="font-semibold">0.025 m³/s</span></div>
+        <div>Source: PSA 1, 2, 3</div>
+        <div id="recycleFlowStatus" class="mt-1 text-green-600 font-semibold">✔ Flowing In</div>
+      </div>
+    </div>
+
+    <span class="text-3xl font-bold">➡️</span>
+
+    <!-- Compressor -->
+    <div class="flex flex-col items-center bg-orange-200 p-4 rounded-lg shadow w-56 h-[350px]">
+      <span class="font-semibold text-lg">Recycle Compressor</span>
+      <div class="flex flex-col justify-center items-center h-full mt-4">
+        <div class="text-sm font-medium mb-2">
+          Speed:<br>
+          <span id="compressorSpeedLabel" class="text-xl font-bold">50%</span>
+        </div>
+        <div class="text-sm font-medium">
+          Methane Output:<br>
+          <span id="methaneOutput" class="text-green-700 text-lg">0.023 m³/s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="bg-white w-full max-w-4xl p-4 rounded shadow">
+    <h2 class="text-xl font-semibold mb-3">Simulation Log</h2>
+    <div id="log" class="h-48 overflow-y-auto bg-gray-50 p-2 text-sm border border-gray-200 rounded">
+      <p>Simulation initialized...</p>
+    </div>
+  </div>
+
+  <script>
+    const tanks = {
+      bta: { volume: 0.3, max: 2.5 },
+      btb: { volume: 2.0, max: 2.5 },
+      recycle: { volume: 4.0, max: 7.0 }
+    };
+
+    const inputRates = {
+      bta: 0.02,
+      btb: 0.015,
+      recycle: 0.025
+    };
+
+    const getColor = (pct) => {
+      if (pct < 0.28) return 'bg-green-400';
+      if (pct < 0.6) return 'bg-yellow-400';
+      if (pct < 0.92) return 'bg-orange-400';
+      return 'bg-red-500';
+    };
+
+    const getPressureLevel = (volume, max) => {
+      const pct = volume / max;
+      if (pct < 0.28) return "LO";
+      if (pct < 0.6) return "MOD";
+      if (pct < 0.92) return "HI";
+      return "HIHI";
+    };
+
+    const updateFlowStatus = (tankId, isFlowing) => {
+      const el = document.getElementById(`${tankId}FlowStatus`);
+      el.textContent = isFlowing ? "✔ Flowing In" : "❌ Stopped";
+      el.className = `mt-1 text-sm font-semibold ${isFlowing ? "text-green-600" : "text-red-500"}`;
+    };
+
+    const updateTankVisual = (volume, max, barId, labelId, pressureLabelId) => {
+      const pct = volume / max;
+      const heightPct = Math.min(100, pct * 100);
+      const color = getColor(pct);
+      const pressure = getPressureLevel(volume, max);
+      const bar = document.getElementById(barId);
+      bar.style.height = heightPct + '%';
+      bar.className = `absolute bottom-0 w-full rounded-t transition-all duration-300 ${color}`;
+      document.getElementById(labelId).textContent = volume.toFixed(2);
+      document.getElementById(pressureLabelId).textContent = pressure;
+    };
+
+    const updateRecycle = () => {
+      const pct = tanks.recycle.volume / tanks.recycle.max;
+      const pressure = getPressureLevel(tanks.recycle.volume, tanks.recycle.max);
+      document.getElementById("recycleLabel").textContent = `${tanks.recycle.volume.toFixed(2)} / 7 m³`;
+      const bar = document.getElementById("recycleBar");
+      bar.style.height = Math.min(100, pct * 100) + '%';
+      bar.className = `absolute bottom-0 w-full rounded-t transition-all duration-300 ${getColor(pct)}`;
+      document.getElementById("recyclePressure").textContent = pressure;
+    };
+
+    const log = (msg) => {
+      const logDiv = document.getElementById("log");
+      logDiv.innerHTML += `<p>${msg}</p>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    };
+
+    let compSpeed = 50;
+
+const runTick = () => {
+  // Recycle pressure must come first for compressor logic
+  let recyclePressure = getPressureLevel(tanks.recycle.volume, tanks.recycle.max);
+
+  // Dynamic compressor speed logic
+  if (recyclePressure === "LO") compSpeed = Math.max(20, compSpeed - 5);
+  else if (recyclePressure === "MOD") compSpeed = compSpeed;
+  else if (recyclePressure === "HI") compSpeed = Math.min(80, compSpeed + 5);
+  else if (recyclePressure === "HIHI") compSpeed = Math.min(100, compSpeed + 10);
+
+  const methaneFlow = (compSpeed * 0.00046).toFixed(3);
+  document.getElementById("compressorSpeedLabel").textContent = `${compSpeed}%`;
+  document.getElementById("methaneOutput").textContent = `${methaneFlow} m³/s`;
+
+  // Buffer A logic
+  let btaPressure = getPressureLevel(tanks.bta.volume, tanks.bta.max);
+  let btaCanFlow = btaPressure !== "HIHI";
+  updateFlowStatus("bta", btaCanFlow);
+  if (btaCanFlow) tanks.bta.volume = Math.min(tanks.bta.volume + inputRates.bta, tanks.bta.max);
+  let btaValve = btaPressure === "LO" ? 0 : 0.5;
+  document.getElementById("btaValveState").textContent = `Valve: ${btaValve > 0 ? 'OPEN' : 'CLOSED'}`;
+  let btaFlow = Math.min(tanks.bta.volume, btaValve * 0.01);
+  tanks.bta.volume = Math.max(0, tanks.bta.volume - btaFlow);
+  tanks.recycle.volume = Math.min(tanks.recycle.max, tanks.recycle.volume + btaFlow);
+
+  // Buffer B logic
+  let btbPressure = getPressureLevel(tanks.btb.volume, tanks.btb.max);
+  let btbCanFlow = btbPressure !== "HIHI";
+  updateFlowStatus("btb", btbCanFlow);
+  if (btbCanFlow) tanks.btb.volume = Math.min(tanks.btb.volume + inputRates.btb, tanks.btb.max);
+  let btbValve = (btbPressure === "HI" || btbPressure === "HIHI") ? 1 : 0.5;
+  document.getElementById("btbValveState").textContent = `Valve: ${btbValve > 0 ? 'OPEN' : 'CLOSED'}`;
+  let btbFlow = Math.min(tanks.btb.volume, btbValve * 0.01);
+  tanks.btb.volume = Math.max(0, tanks.btb.volume - btbFlow);
+  tanks.recycle.volume = Math.min(tanks.recycle.max, tanks.recycle.volume + btbFlow);
+
+  // Recycle tank flow
+  let recycleCanFlow = recyclePressure !== "HIHI";
+  updateFlowStatus("recycle", recycleCanFlow);
+  if (recycleCanFlow) tanks.recycle.volume = Math.min(tanks.recycle.volume + inputRates.recycle, tanks.recycle.max);
+
+  // Compressor draws from recycle tank
+  tanks.recycle.volume = Math.max(0, tanks.recycle.volume - methaneFlow);
+
+  // Update visuals
+  updateTankVisual(tanks.bta.volume, tanks.bta.max, 'btaBar', 'btaLabel', 'btaPressure');
+  updateTankVisual(tanks.btb.volume, tanks.btb.max, 'btbBar', 'btbLabel', 'btbPressure');
+  updateRecycle();
+
+  log(`BTA: ${tanks.bta.volume.toFixed(2)} | BTB: ${tanks.btb.volume.toFixed(2)} | Recycle: ${tanks.recycle.volume.toFixed(2)} | Methane: ${methaneFlow} m³/s`);
+};
+
+
+    setInterval(runTick, 300);
+  </script>
+</body>
+</html>
