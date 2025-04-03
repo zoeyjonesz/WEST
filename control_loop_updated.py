@@ -39,7 +39,7 @@ class GasSystem:
         # System Limits
         self.lowest_compressor_speed = 80
         self.max_compressor_speed = 400
-        self.max_buffer_valve_flow = 0.05
+        self.max_buffer_valve_flow = 0.29
         self.max_recycle_valve_flow = 0.231
 
 
@@ -82,9 +82,9 @@ class GasSystem:
     
     
     def classify_buffer_volume(self, volume):
-        if 0 <= volume < 1.5:
+        if 0 <= volume < 1.3:
             return "low"
-        elif 1.5 <= volume <= 2.3:
+        elif 1.3 <= volume <= 2.3:
             return "high"
         elif 2.3 <= volume <= 2.5:
             return "hihi"
@@ -110,18 +110,19 @@ class GasSystem:
         
         if self.recycling_volume is not None:
             self.recycling_volume = self.recycle_input + (self.max_buffer_valve_flow  * (self.valve_BA/100)) + (self.max_buffer_valve_flow  * (self.valve_BB/100))+ self.recycling_volume - ((self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow)
-            print(f"Input: {self.recycle_input}")
-            print(f"Buffer flow A: {(self.max_buffer_valve_flow  * (self.valve_BA/100))}")
-            print(f"Buffer flow B: {(self.max_buffer_valve_flow  * (self.valve_BB/100))}")
+#             print(f"Input: {self.recycle_input}")
+#             print(f"Buffer flow A: {(self.max_buffer_valve_flow  * (self.valve_BA/100))}")
+#             print(f"Buffer flow B: {(self.max_buffer_valve_flow  * (self.valve_BB/100))}")
 
-            print(f"Tank Volume: {self.recycling_volume}")
-            print(f"Subtract: {(self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow}")
+#             print(f"Tank Volume: {self.recycling_volume}")
+#             print(f"Subtract: {(self.compressor_speed/ self.max_compressor_speed) * self.max_recycle_valve_flow}")
             
         if self.bta_volume is not None:
             self.bta_volume = self.bta_input + self.bta_volume - (self.max_buffer_valve_flow  * (self.valve_BA/100))
             print(f"BTA: {self.bta_volume}")
         if self.btb_volume is not None:
             self.btb_volume = self.btb_input + self.btb_volume - (self.max_buffer_valve_flow  * (self.valve_BB/100))
+            print(f"btb volume: {self.btb_volume}")
     
     
     # adjust the volume in BA
@@ -130,7 +131,7 @@ class GasSystem:
         bta_status = self.classify_buffer_volume(self.bta_volume)
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
-        if self.bta_input == 0 and bta_status == "low":
+        if self.bta_input == 0 and bta_status < recycle_status:
             self.valve_BA = 0
             return 
    
@@ -153,9 +154,9 @@ class GasSystem:
         
         btb_status = self.classify_buffer_volume(self.btb_volume)
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
-        
+        print(f"BTB STATUS: {btb_status}")
         # if idle close valve
-        if self.btb_input == 0 and btb_status == "low":
+        if self.btb_input == 0 and btb_status < recycle_status:
             self.valve_BB = 0
             return 
         
@@ -176,8 +177,10 @@ class GasSystem:
         recycle_status = self.classify_recycle_volume(self.recycling_volume)
         
         if recycle_status == "low": 
-            self.compressor_speed = max(self.compressor_speed - 5, self.lowest_compressor_speed)
+            self.compressor_speed = self.lowest_compressor_speed
 #             print("Recycle low → Decreasing compressor speed")
+        elif recycle_status == "moderate":
+            self.compressor_speed = self.compressor_speed + 2
         elif recycle_status == "high": 
             self.compressor_speed = min(self.compressor_speed + 5, self.max_compressor_speed)
 #             print("Recycle high → Increase compressor speed")
@@ -193,18 +196,13 @@ class GasSystem:
         for _ in range(10): 
             
             self.parse_data()       # read row data from excel 
-            
+            self.update_volumes()
             # apply logic here NOTE location of these calls
             self.adjust_recycle()
             self.adjust_BA()
             self.adjust_BB()
-            
             self.update_volumes()   # update tank volume 
             
-            self.time_history.append(self.time)
-            self.recycle_history.append(self.recycling_volume)
-            self.bta_history.append(self.bta_volume)
-            self.btb_history.append(self.btb_volume)
 
             
             self.line_counter += 1
@@ -225,34 +223,47 @@ class GasSystem:
             # simulating the volume change in tanks over 10 seconds 
             for _ in range(10): 
       
-                self.parse_data()
                 # apply logic here NOTE might change location of these calls 
                 self.adjust_recycle()
                 self.adjust_BA()
                 self.adjust_BB()
                 self.update_volumes()   # update tank volume 
                 
-                
-                self.time_history.append(self.time)
-                self.recycle_history.append(self.recycling_volume)
-                self.bta_history.append(self.bta_volume)
-                self.btb_history.append(self.btb_volume)
+#                 #This is creating duplictes 
+#                 self.time_history.append(self.time)
+#                 self.recycle_history.append(self.recycling_volume)
+#                 self.bta_history.append(self.bta_volume)
+#                 self.btb_history.append(self.btb_volume)
 
                 
-                self.line_counter += 1
+          
 #                 print(f"[t={self.line_counter}] Recycle: {self.recycling_volume:.3f}, BTA: {self.bta_volume:.3f}, BTB: {self.btb_volume:.3f}, Speed: {self.compressor_speed}, BA: {self.valve_BA}, BB: {self.valve_BB}")
 
         # actually waiting 10 seconds so it's realistic 
         time.sleep(1)
 
-        
-        if derivative >= 0 and self.compressor_speed <= self.max_compressor_speed - 10: 
-#             print("Recycle tank stable or rising. Increasing compressor speed to maintain.")
-            self.compressor_speed += 5
-            
-            # Note decided if I want to update compressor speed here right away 
-     
-      
+        # pressure is increasing in 
+        if derivative >= 0:
+            recycle_status = self.classify_recycle_volume(self.recycling_volume)
+            if recycle_status == "high":
+                # Recycle tank already high and still increasing → allow more pressure out
+                self.compressor_speed = min(self.compressor_speed + 10, self.max_compressor_speed)
+
+#             elif recycle_status == "moderate":
+#                 # Recycle tank in desired range → no action
+#                 continue 
+            elif recycle_status == "low":
+                # Recycle tank is low but increasing → hold speed
+                self.compressor_speed = max(self.compressor_speed - 5, self.lowest_compressor_speed)
+                
+        self.update_volumes()
+        # update
+        self.time_history.append(self.time)
+        self.recycle_history.append(self.recycling_volume)
+        self.bta_history.append(self.bta_volume)
+        self.btb_history.append(self.btb_volume)
+        self.line_counter += 1
+
         
     
     def run_simulation(self, max_steps=200):
@@ -270,3 +281,28 @@ class GasSystem:
 # call the system 
 system = GasSystem()
 system.run_simulation()
+
+
+
+
+
+
+# sample out ouput
+plt.figure(figsize=(12, 6))
+plt.plot(system.time_history, system.recycle_history, label='Recycle Tank', linewidth=2)
+plt.plot(system.time_history, system.bta_history, label='BTA Tank', linewidth=2)
+plt.plot(system.time_history, system.btb_history, label='BTB Tank', linewidth=2)
+
+ax = plt.gca()
+ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+plt.yticks(np.arange(-0.5, 4.6, 0.5))  # ticks from 0 to 4.5
+plt.ylim(-0.5, 4.5) 
+plt.xlabel("Time")
+plt.ylabel("Tank Volume")
+plt.title("Tank Volume Over Time")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.xticks(system.time_history[::100], rotation=45, fontsize=8)
+plt.show()
