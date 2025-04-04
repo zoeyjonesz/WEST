@@ -37,9 +37,6 @@ def main():
     flow_rate_index = 1
 
     system.update_volume()
-    print(f"Initial Recycling Volume: {system.recycling_volume} m^3")
-    print(f"Initial BTA Volume: {system.bta_volume} m^3")   
-    print(f"Initial BTB Volume: {system.btb_volume} m^3")
 
     # Main loop: Continue operation while conditions hold
     while (system.pressure_threshold('recycling') == 'MOD' and

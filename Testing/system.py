@@ -288,8 +288,8 @@ class System:
 
             self.remove_volume('recycling')
 
-            print(f"Updated volumes: Recycling: {self.recycling_volume}, BTA: {self.bta_volume}, BTB: {self.btb_volume}")
-            print(f"Updated pressures: Recycling: {self.recycling_pressure} psi, BTA: {self.bta_pressure} psi, BTB: {self.btb_pressure} psi")
+            #print(f"Updated volumes: Recycling: {self.recycling_volume}, BTA: {self.bta_volume}, BTB: {self.btb_volume}")
+            print(f"Updated Pressures: Recycling: {self.recycling_pressure} psi, BTA: {self.bta_pressure} psi, BTB: {self.btb_pressure} psi")
 
             # NO ERROR HANDLING HERE, SHOULD CONSIDER ADDING IT
             # Add a delay to simulate time passing

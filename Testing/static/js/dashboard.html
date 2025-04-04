@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tank Pressure Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-kY7IzBWUb0uWlNPbYz9IDLM3cVThpYWrZ1NqRgkz1ce2JJktkkAVfX5CmKaLJ3N2" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+  <h1 class="text-4xl font-bold mb-8">Tank Pressure Monitor</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+      <h2 class="text-xl font-semibold mb-4">Recycle Tank</h2>
+      <div class="text-6xl font-bold text-green-400" id="recycle-psi">--</div>
+    </div>
+
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+      <h2 class="text-xl font-semibold mb-4">BTA Tank</h2>
+      <div class="text-6xl font-bold text-yellow-400" id="bta-psi">--</div>
+    </div>
+
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+      <h2 class="text-xl font-semibold mb-4">BTB Tank</h2>
+      <div class="text-6xl font-bold text-red-400" id="btb-psi">--</div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    socket.on('connect', () => {
+      console.log("Connected to server");
+    });
+
+    socket.on('pressure_update', data => {
+      document.getElementById("recycle-psi").textContent = `${data.recycle.toFixed(2)} PSI`;
+      document.getElementById("bta-psi").textContent = `${data.bta.toFixed(2)} PSI`;
+      document.getElementById("btb-psi").textContent = `${data.btb.toFixed(2)} PSI`;
+    });
+  </script>
+</body>
+</html>
