@@ -27,7 +27,7 @@ class System:
         self.max_compressor_speed = 400
         self.max_buffer_valve_flow = 0.29      
         self.max_recycle_valve_flow = 0.231 
-        self.temperature = 298
+        self.temperature = 320  # Temperature in Kelvin
 
          # Max volumes for tanks
         self.max_recycling_volume = 7
@@ -152,7 +152,7 @@ class System:
 
     def pressure_threshold(self, tank_type):
         '''
-        Determine the volume threshold for a specified tank.
+        Determine the pressure threshold for a specified tank.
         
         Parameters:
         tank_type (str): Type of tank ('recycling', 'bta', 'btb').
@@ -165,7 +165,7 @@ class System:
                 return 'LO'
             elif self.recycling_pressure <= 3:
                 return 'MOD'
-            elif self.recycling_pressure <= 3:
+            elif self.recycling_pressure <= 5:
                 return 'HI'
             else:
                 return 'Out of pressure range: {self.recycling_pressure} psi'
@@ -274,9 +274,19 @@ class System:
             if btb_flowrate is not None:
                 self.add_volume('btb', btb_flowrate)
 
+            if self.valve_BA != 0 and self.recycling_pressure < self.bta_pressure:
+                equalized_pressure = self.equalize_pressure(self.recycling_pressure, self.bta_pressure, self.recycling_volume, self.bta_volume)
+                self.bta_pressure = equalized_pressure
+                self.recycling_pressure = equalized_pressure
+                self.update_volume()
+
+            elif self.valve_BB != 0 and self.recycling_pressure < self.btb_pressure:
+                equalized_pressure = self.equalize_pressure(self.recycling_pressure, self.btb_pressure, self.recycling_volume, self.btb_volume)
+                self.btb_pressure = equalized_pressure
+                self.recycling_pressure = equalized_pressure
+                self.update_volume()
+
             self.remove_volume('recycling')
-            self.remove_volume('bta')
-            self.remove_volume('btb')
 
             print(f"Updated volumes: Recycling: {self.recycling_volume}, BTA: {self.bta_volume}, BTB: {self.btb_volume}")
             print(f"Updated pressures: Recycling: {self.recycling_pressure} psi, BTA: {self.bta_pressure} psi, BTB: {self.btb_pressure} psi")
