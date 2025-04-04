@@ -150,7 +150,7 @@ class System:
 
 
 
-    def volume_threshold(self, tank_type):
+    def pressure_threshold(self, tank_type):
         '''
         Determine the volume threshold for a specified tank.
         
@@ -161,25 +161,25 @@ class System:
         str: Volume status ('LO', 'MOD', 'HI', 'HIHI').
         '''
         if tank_type == 'recycling':
-            if self.recycling_volume <= 2.0:
+            if self.recycling_pressure <= 0.0 and self.recycling_pressure >= -2:
                 return 'LO'
-            elif self.recycling_volume <= 4.5:
+            elif self.recycling_pressure <= 3:
                 return 'MOD'
-            elif self.recycling_volume <= 6.5:
+            elif self.recycling_pressure <= 3:
                 return 'HI'
             else:
-                return 'HIHI'
+                return 'Out of pressure range: {self.recycling_pressure} psi'
         
         elif tank_type in ['bta', 'btb']:
-            volume = self.bta_volume if tank_type == 'bta' else self.btb_volume
-            if volume <= 1.1:
+            pressure = self.bta_pressure if tank_type == 'bta' else self.btb_pressure
+            if pressure <= 1.5 and pressure >= 0:
                 return 'LO'
-            elif volume < 2.3:
+            elif pressure <= 3:
                 return 'HI'
             else:
                 return 'HIHI'
         else:
-            return 'Invalid tank type'
+            return 'Out of pressure range: {self.bta_pressure} psi' if tank_type == 'bta' else 'Out of pressure range: {self.btb_pressure} psi'
 
 
     def update_pressure(self) -> None:
