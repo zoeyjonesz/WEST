@@ -187,19 +187,43 @@ class System:
         Calculate pressure based on Pressure = Density * Gas Constant * Temperature / Volume.
 
         Parameters:
-        - None (uses internal tank volumes).
+        - None (uses internal tank values).
 
         Returns:
         None (modifies the object's state directly).
         """
         methane_density = 0.675
+        # Calculate pressure using the ideal gas law
         recycling_pressure = methane_density * 8.314 * self.temperature / self.recycling_volume
         bta_pressure = methane_density * 8.314 * self.temperature / self.bta_volume
         btb_pressure = methane_density * 8.314 * self.temperature / self.btb_volume
 
-        self.recycling_pressure = recycling_pressure * 0.0001450377377    # Convert to psi
-        self.bta_pressure = bta_pressure * 0.0001450377377  # Convert to psi
-        self.btb_pressure = btb_pressure * 0.0001450377377  # Convert to psi
+        # Convert pressure from Pa to psi (1 Pa = 0 .0001450377377 psi)
+        self.recycling_pressure = recycling_pressure * 0.0001450377377    
+        self.bta_pressure = bta_pressure * 0.0001450377377  
+        self.btb_pressure = btb_pressure * 0.0001450377377
+
+
+    def update_volume(self) -> None:
+        """
+        Update the volume of the tanks based Volume = Density * Gas Constant * Temperature / Pressure.
+
+        Parameters:
+        - None (uses internal tank values).
+
+        Returns:
+        None (modifies the object's state directly).
+        """
+        # Convert psi to Pa (1 psi = 6894.76 Pa)
+        recycling_pressure = self.recycling_pressure * 6894.76
+        bta_pressure = self.bta_pressure * 6894.76
+        btb_pressure = self.btb_pressure * 6894.76
+
+        methane_density = 0.675
+        
+        self.recycling_volume = (methane_density * 8.314 * self.temperature) / recycling_pressure
+        self.bta_volume = (methane_density * 8.314 * self.temperature) / bta_pressure
+        self.btb_volume = (methane_density * 8.314 * self.temperature) / btb_pressure
 
 
     def equalize_pressure(self) -> None:
