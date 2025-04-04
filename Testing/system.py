@@ -25,7 +25,7 @@ class System:
         # Predefined limits for compressor speed and valve flow rates      
         self.lowest_compressor_speed = 80
         self.max_compressor_speed = 400
-        self.max_buffer_valve_flow = 0.29      # changed from 0.5 to 0.1 
+        self.max_buffer_valve_flow = 0.29      
         self.max_recycle_valve_flow = 0.231 
         self.temperature = 298
 
@@ -226,40 +226,30 @@ class System:
         self.btb_volume = (methane_density * 8.314 * self.temperature) / btb_pressure
 
 
-    def equalize_pressure(self) -> None:
+    def equalize_pressure(self, P1, P2, V1, V2) -> float:
         """
-        Calculate pressure.
-
+        Equalize the pressure between the two tanks.
 
         Parameters:
-        - input_flowrate (float): The flowrate of gas entering the tank (in m³/s).
-        - current_pressure (float): The current pressure in the tank (in psi).
-        - tank_volume (float): The volume of the tank (in m³).
-        - flowrate_time (float): The time over which the flow occurs (in seconds).
-
+        - P1 (float): The current pressure in tank one (in psi).
+        - P2 (float): The current pressure in tank two (in psi).
+        - V1 (float): The volume of tank one (in m³).
+        - V2 (float): The volume of tank two (in m³).
 
         Returns:
-        - float: The change in pressure (in psi).
+        - float: Equalized pressure (in psi).
         """
-        # Calculate the change in volume (flowrate * time)
-        change_in_volume = flowrate * flowrate_time  # in m³
-       
-        # Apply Boyle's Law to calculate the new pressure
-        original_pressure = current_pressure + 14.7  # Convert current pressure to absolute (in psi)
-       
-        # Calculate the new volume after flow (V2)
-        new_volume = original_volume + change_in_volume
-       
-        # Apply Boyle's Law to calculate new pressure
-        P2 = original_pressure * (original_volume / new_volume)  # Absolute pressure (in psi)
-       
+        # Convert psi to absolute pressure
+        abs_P1 = P1 + 14.696
+        abs_P2 = P2 + 14.696 
+
+        # Apply Boyle's Law to calculate the equalized pressure
+        abs_equalized_pressure = (abs_P1 * V1 + abs_P2 * V2) / (V1 + V2)
+
         # Convert back to gauge pressure
-        P2_gauge = P2 - 14.7  # Subtract atmospheric pressure (14.7 psi) to get gauge pressure
-       
-        # Calculate the pressure change
-        pressure_change = P2_gauge - current_pressure
-       
-        return pressure_change
+        equalized_pressure = abs_equalized_pressure - 14.696
+    
+        return equalized_pressure
 
 
     def changes_in_tanks(self, df, index:int):
