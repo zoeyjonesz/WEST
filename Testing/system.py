@@ -27,6 +27,7 @@ class System:
         self.max_compressor_speed = 400
         self.max_buffer_valve_flow = 0.29      # changed from 0.5 to 0.1 
         self.max_recycle_valve_flow = 0.231 
+        self.temperature = 298
 
          # Max volumes for tanks
         self.max_recycling_volume = 7
@@ -48,21 +49,21 @@ class System:
         if volume_type == "recycling":
             if self.recycling_volume + amount <= self.max_recycling_volume:
                 self.recycling_volume += amount
-                self.recycling_pressure += self.calculate_pressure_change(amount, self.recycling_pressure, self.recycling_volume, 1)
+                self.update_pressure()
             else:
                 print(f"Error: Cannot exceed max recycling volume of {self.max_recycling_volume}.")
         
         elif volume_type == "bta":
             if self.bta_volume + amount <= self.max_bta_volume:
                 self.bta_volume += amount
-                self.bta_pressure += self.calculate_pressure_change(amount, self.bta_pressure, self.bta_volume, 1)
+                self.update_pressure()
             else:
                 print(f"Error: Cannot exceed max bta volume of {self.max_bta_volume}.")
         
         elif volume_type == "btb":
             if self.btb_volume + amount <= self.max_btb_volume:
                 self.btb_volume += amount
-                self.btb_pressure += self.calculate_pressure_change(amount, self.btb_pressure, self.btb_volume, 1)
+                self.update_pressure()
             else:
                 print(f"Error: Cannot exceed max btb volume of {self.max_btb_volume}.")
         
@@ -84,7 +85,7 @@ class System:
             recycle_output = self.max_recycle_valve_flow * (self.compressor_speed/self.max_compressor_speed)
             if self.recycling_volume - recycle_output >= 0:
                 self.recycling_volume -= recycle_output 
-                self.recycling_pressure += self.calculate_pressure_change(-recycle_output, self.recycling_pressure, self.recycling_volume, 1)
+                self.update_pressure()
             else:
                 print("Error: Cannot remove more volume than the current amount in 'recycling'.")
             
@@ -93,7 +94,7 @@ class System:
                 print("'bta' valve closed.")
             elif self.bta_volume - self.max_buffer_valve_flow >= 0:
                 self.bta_volume -= self.max_buffer_valve_flow
-                self.bta_pressure += self.calculate_pressure_change(-self.max_buffer_valve_flow, self.bta_pressure, self.bta_volume, 1)
+                self.update_pressure()
                 self.add_volume('recycling', self.max_buffer_valve_flow)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'bta'.")
@@ -103,7 +104,7 @@ class System:
                 print("'btb' valve closed.")
             elif self.btb_volume - self.max_buffer_valve_flow >= 0:
                 self.btb_volume -= self.max_buffer_valve_flow
-                self.btb_pressure += self.calculate_pressure_change(-self.max_buffer_valve_flow, self.btb_pressure, self.btb_volume, 1)
+                self.update_pressure()
                 self.add_volume('recycling', self.max_buffer_valve_flow)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'btb'.")
@@ -181,9 +182,29 @@ class System:
             return 'Invalid tank type'
 
 
-    def calculate_pressure_change(self, flowrate, current_pressure, original_volume, flowrate_time) -> float:
+    def update_pressure(self) -> None:
         """
-        Calculate pressure change in a tank due to the input flowrate over time.
+        Calculate pressure based on Pressure = Density * Gas Constant * Temperature / Volume.
+
+        Parameters:
+        - None (uses internal tank volumes).
+
+        Returns:
+        None (modifies the object's state directly).
+        """
+        methane_density = 0.675
+        recycling_pressure = methane_density * 8.314 * self.temperature / self.recycling_volume
+        bta_pressure = methane_density * 8.314 * self.temperature / self.bta_volume
+        btb_pressure = methane_density * 8.314 * self.temperature / self.btb_volume
+
+        self.recycling_pressure = recycling_pressure * 0.0001450377377    # Convert to psi
+        self.bta_pressure = bta_pressure * 0.0001450377377  # Convert to psi
+        self.btb_pressure = btb_pressure * 0.0001450377377  # Convert to psi
+
+
+    def equalize_pressure(self) -> None:
+        """
+        Calculate pressure.
 
 
         Parameters:
@@ -203,7 +224,7 @@ class System:
         original_pressure = current_pressure + 14.7  # Convert current pressure to absolute (in psi)
        
         # Calculate the new volume after flow (V2)
-        new_volume = original_volume + change_in_volume # Volume increases due to input flow
+        new_volume = original_volume + change_in_volume
        
         # Apply Boyle's Law to calculate new pressure
         P2 = original_pressure * (original_volume / new_volume)  # Absolute pressure (in psi)
