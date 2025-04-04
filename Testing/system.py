@@ -25,8 +25,8 @@ class System:
         # Predefined limits for compressor speed and valve flow rates      
         self.lowest_compressor_speed = 80
         self.max_compressor_speed = 400
-        self.max_buffer_valve_flow = 0.1      # changed from 0.5 to 0.1 
-        self.max_recycle_valve_flow = 0.6 
+        self.max_buffer_valve_flow = 0.29      # changed from 0.5 to 0.1 
+        self.max_recycle_valve_flow = 0.231 
 
          # Max volumes for tanks
         self.max_recycling_volume = 7
@@ -84,7 +84,7 @@ class System:
             recycle_output = self.max_recycle_valve_flow * (self.compressor_speed/self.max_compressor_speed)
             if self.recycling_volume - recycle_output >= 0:
                 self.recycling_volume -= recycle_output 
-                self.recycling_pressure -= self.calculate_pressure_change(recycle_output, self.recycling_pressure, self.recycling_volume, 1)
+                self.recycling_pressure += self.calculate_pressure_change(-recycle_output, self.recycling_pressure, self.recycling_volume, 1)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'recycling'.")
             
@@ -93,7 +93,7 @@ class System:
                 print("'bta' valve closed.")
             elif self.bta_volume - self.max_buffer_valve_flow >= 0:
                 self.bta_volume -= self.max_buffer_valve_flow
-                self.bta_pressure -= self.calculate_pressure_change(self.max_buffer_valve_flow, self.bta_pressure, self.bta_volume, 1)
+                self.bta_pressure += self.calculate_pressure_change(-self.max_buffer_valve_flow, self.bta_pressure, self.bta_volume, 1)
                 self.add_volume('recycling', self.max_buffer_valve_flow)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'bta'.")
@@ -103,7 +103,7 @@ class System:
                 print("'btb' valve closed.")
             elif self.btb_volume - self.max_buffer_valve_flow >= 0:
                 self.btb_volume -= self.max_buffer_valve_flow
-                self.btb_pressure -= self.calculate_pressure_change(self.max_buffer_valve_flow, self.btb_pressure, self.btb_volume, 1)
+                self.btb_pressure += self.calculate_pressure_change(-self.max_buffer_valve_flow, self.btb_pressure, self.btb_volume, 1)
                 self.add_volume('recycling', self.max_buffer_valve_flow)
             else:
                 print("Error: Cannot remove more volume than the current amount in 'btb'.")
@@ -181,7 +181,7 @@ class System:
             return 'Invalid tank type'
 
 
-    def calculate_pressure_change(self, input_flowrate, current_pressure, tank_volume, flowrate_time) -> float:
+    def calculate_pressure_change(self, flowrate, current_pressure, original_volume, flowrate_time) -> float:
         """
         Calculate pressure change in a tank due to the input flowrate over time.
 
@@ -197,17 +197,16 @@ class System:
         - float: The change in pressure (in psi).
         """
         # Calculate the change in volume (flowrate * time)
-        change_in_volume = input_flowrate * flowrate_time  # in m³
+        change_in_volume = flowrate * flowrate_time  # in m³
        
         # Apply Boyle's Law to calculate the new pressure
-        P1 = current_pressure + 14.7  # Convert current pressure to absolute (in psi)
-        V1 = tank_volume  # in m³
+        original_pressure = current_pressure + 14.7  # Convert current pressure to absolute (in psi)
        
         # Calculate the new volume after flow (V2)
-        V2 = V1 + change_in_volume # Volume increases due to input flow
+        new_volume = original_volume + change_in_volume # Volume increases due to input flow
        
         # Apply Boyle's Law to calculate new pressure
-        P2 = P1 * (V1 / V2)  # Absolute pressure (in psi)
+        P2 = original_pressure * (original_volume / new_volume)  # Absolute pressure (in psi)
        
         # Convert back to gauge pressure
         P2_gauge = P2 - 14.7  # Subtract atmospheric pressure (14.7 psi) to get gauge pressure
